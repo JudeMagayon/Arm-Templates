@@ -1,60 +1,244 @@
 // ===============================
-// createUiDefinition.json - Portal UI Definition for All Free Log Sources with Boolean UI
+// azuredeploy.json - ARM Template with Boolean Parameters for Log Sources
 // ===============================
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
-  "handler": "Microsoft.Resources.CreateUiDefinition",
-  "version": "1.0.0",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
   "parameters": {
-    "basics": [
-      {
-        "name": "workspaceName",
-        "type": "Microsoft.Common.TextBox",
-        "label": "Log Analytics Workspace Name",
-        "toolTip": "Enter the name of your existing Log Analytics workspace."
-      },
-      {
-        "name": "workspaceResourceGroup",
-        "type": "Microsoft.Common.ResourceGroupPicker",
-        "label": "Resource Group",
-        "toolTip": "Select the resource group that contains the Log Analytics workspace."
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the existing Log Analytics Workspace where Microsoft Sentinel is enabled."
       }
-    ],
-    "steps": [
-      {
-        "name": "selectLogs",
-        "label": "Select Free Log Sources",
-        "elements": [
-          { "name": "AzureActivity", "type": "Microsoft.Common.Toggle", "label": "Azure Activity (Platform Logs)", "defaultValue": false },
-          { "name": "SentinelHealth", "type": "Microsoft.Common.Toggle", "label": "Sentinel Health (Automatic)", "defaultValue": false },
-          { "name": "Office365", "type": "Microsoft.Common.Toggle", "label": "Office Activity (Exchange, SharePoint, Teams)", "defaultValue": false },
-          { "name": "EntraRiskAlerts", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Entra ID Protection - IPC)", "defaultValue": false },
-          { "name": "DefenderEndpoint", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Endpoint - MDATP)", "defaultValue": false },
-          { "name": "DefenderIdentity", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Identity - AATP)", "defaultValue": false },
-          { "name": "DefenderCloudApps", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Cloud Apps - MCAS)", "defaultValue": false },
-          { "name": "DefenderCloud", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Cloud)", "defaultValue": false },
-          { "name": "DefenderIoT", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for IoT)", "defaultValue": false },
-          { "name": "DefenderXDRAlerts", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Microsoft Defender XDR)", "defaultValue": false },
-          { "name": "DefenderXDRIncidents", "type": "Microsoft.Common.Toggle", "label": "Security Incident (Microsoft Defender XDR)", "defaultValue": false }
-        ]
+    },
+    "workspaceResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Group name of the existing Log Analytics Workspace."
       }
-    ],
-    "outputs": {
-      "workspaceName": "[parameters('workspaceName')]",
-      "workspaceResourceGroup": "[parameters('workspaceResourceGroup')]",
-      "logSources": "[union(
-        if(steps('selectLogs').AzureActivity, ['AzureActivity'], []),
-        if(steps('selectLogs').SentinelHealth, ['SentinelHealth'], []),
-        if(steps('selectLogs').Office365, ['Office365'], []),
-        if(steps('selectLogs').EntraRiskAlerts, ['EntraRiskAlerts'], []),
-        if(steps('selectLogs').DefenderEndpoint, ['DefenderEndpoint'], []),
-        if(steps('selectLogs').DefenderIdentity, ['DefenderIdentity'], []),
-        if(steps('selectLogs').DefenderCloudApps, ['DefenderCloudApps'], []),
-        if(steps('selectLogs').DefenderCloud, ['DefenderCloud'], []),
-        if(steps('selectLogs').DefenderIoT, ['DefenderIoT'], []),
-        if(steps('selectLogs').DefenderXDRAlerts, ['DefenderXDRAlerts'], []),
-        if(steps('selectLogs').DefenderXDRIncidents, ['DefenderXDRIncidents'], [])
-      )]"
+    },
+    "enableAzureActivity": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Azure Activity logs"
+      }
+    },
+    "enableSentinelHealth": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Sentinel Health monitoring"
+      }
+    },
+    "enableOffice365": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Office 365 logs (Exchange, SharePoint, Teams)"
+      }
+    },
+    "enableEntraIDProtection": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Entra ID Protection logs"
+      }
+    },
+    "enableDefenderEndpoint": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender for Endpoint logs"
+      }
+    },
+    "enableDefenderIdentity": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender for Identity logs"
+      }
+    },
+    "enableDefenderCloudApps": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender for Cloud Apps logs"
+      }
+    },
+    "enableDefenderCloud": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender for Cloud logs"
+      }
+    },
+    "enableDefenderIoT": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender for IoT logs"
+      }
+    },
+    "enableDefenderXDRIncidents": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender XDR Incidents"
+      }
+    },
+    "enableDefenderXDRAlerts": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Enable Defender XDR Alerts"
+      }
+    }
+  },
+  "variables": {
+    "workspaceResourceId": "[resourceId(parameters('workspaceResourceGroup'), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+  },
+  "resources": [
+    // Azure Activity (already provided)
+    {
+      "condition": "[parameters('enableSentinelHealth')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-sentinelhealth')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-sentinelhealth",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-sentinelhealth",
+        "displayName": "Sentinel Health Monitoring",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "condition": "[parameters('enableOffice365')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-office365')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-office365",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-office365",
+        "displayName": "Office 365",
+        "version": "3.0.2"
+      }
+    },
+    {
+      "condition": "[parameters('enableEntraIDProtection')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-entra-id-riskalerts')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-entra-id-riskalerts",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-entra-id-riskalerts",
+        "displayName": "Entra ID Protection Alerts",
+        "version": "1.0.0"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderEndpoint')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection",
+        "displayName": "Microsoft Defender for Endpoint",
+        "version": "3.0.2"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderIdentity')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity",
+        "displayName": "Microsoft Defender for Identity",
+        "version": "2.0.2"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderCloudApps')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity",
+        "displayName": "Microsoft Defender for Cloud Apps",
+        "version": "3.0.2"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderCloud')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud",
+        "displayName": "Microsoft Defender for Cloud",
+        "version": "3.0.1"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderIoT')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforiot')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforiot",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforiot",
+        "displayName": "Microsoft Defender for IoT",
+        "version": "3.0.0"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderXDRAlerts')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "displayName": "Microsoft Defender XDR",
+        "version": "3.0.3"
+      }
+    },
+    {
+      "condition": "[parameters('enableDefenderXDRIncidents')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender-incidents')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "displayName": "Microsoft Defender XDR - Incidents",
+        "version": "3.0.3"
+      }
+    }
+  ],
+  "outputs": {
+    "workspaceResourceId": {
+      "type": "string",
+      "value": "[variables('workspaceResourceId')]"
+    },
+    "deploymentStatus": {
+      "type": "string",
+      "value": "[concat('Deployment completed for workspace: ', parameters('workspaceName'))]"
     }
   }
 }
