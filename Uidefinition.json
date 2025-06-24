@@ -1,6 +1,3 @@
-// ===============================
-// createUiDefinition.json - Portal UI Definition for SecurityAlert-Only Deployment (Fixed CheckBoxGroup Rendering)
-// ===============================
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
   "handler": "Microsoft.Resources.CreateUiDefinition",
@@ -11,49 +8,156 @@
         "name": "workspaceName",
         "type": "Microsoft.Common.TextBox",
         "label": "Log Analytics Workspace Name",
-        "toolTip": "Enter the name of your existing Log Analytics workspace."
+        "toolTip": "Enter the name of your existing Log Analytics workspace.",
+        "placeholder": "Enter workspace name",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-zA-Z0-9][a-zA-Z0-9-]{2,62}$",
+          "validationMessage": "Workspace name must be 3-63 characters long and can contain letters, numbers, and hyphens."
+        }
       },
       {
         "name": "workspaceResourceGroup",
-        "type": "Microsoft.Common.ResourceGroupPicker",
-        "label": "Resource Group",
-        "toolTip": "Select the resource group that contains the Log Analytics workspace."
+        "type": "Microsoft.Common.DropDown",
+        "label": "Workspace Resource Group",
+        "toolTip": "Select the resource group that contains your Log Analytics workspace.",
+        "constraints": {
+          "required": true,
+          "allowedValues": "[map(resourceGroups(), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+        }
       }
     ],
     "steps": [
       {
         "name": "selectLogs",
-        "label": "Select Security Alert Log Sources",
+        "label": "Select Log Sources to Deploy",
         "elements": [
           {
-            "name": "logSources",
+            "name": "platformLogSources",
             "type": "Microsoft.Common.CheckBoxGroup",
-            "label": "Choose which Security Alert sources to deploy",
-            "toolTip": "Select Microsoft Sentinel Content Hub security alert solutions to deploy.",
-            "constraints": {
-              "required": true,
-              "minLength": 1
-            },
+            "label": "Platform & Health Log Sources",
+            "toolTip": "Select core platform and health monitoring sources.",
             "options": {
               "items": [
-                { "label": "Entra ID Protection Alerts", "value": "EntraRiskAlerts" },
-                { "label": "Defender for Endpoint (MDATP)", "value": "DefenderEndpoint" },
-                { "label": "Defender for Identity (AATP)", "value": "DefenderIdentity" },
-                { "label": "Defender for Cloud Apps (MCAS)", "value": "DefenderCloudApps" },
-                { "label": "Defender for Cloud", "value": "DefenderCloud" },
-                { "label": "Defender for IoT", "value": "DefenderIoT" },
-                { "label": "Defender XDR - Alerts", "value": "DefenderXDRAlerts" },
-                { "label": "Defender XDR - Incidents", "value": "DefenderXDRIncidents" }
+                { 
+                  "label": "Azure Activity (Platform Logs)", 
+                  "value": "AzureActivity" 
+                },
+                { 
+                  "label": "Sentinel Health (Automatic)", 
+                  "value": "SentinelHealth" 
+                }
               ]
             }
+          },
+          {
+            "name": "officeLogSources",
+            "type": "Microsoft.Common.CheckBoxGroup",
+            "label": "Microsoft 365 Activity Log Sources",
+            "toolTip": "Select Microsoft 365 and Office activity logging sources.",
+            "options": {
+              "items": [
+                { 
+                  "label": "Office Activity (Exchange, SharePoint, Teams)", 
+                  "value": "Office365" 
+                }
+              ]
+            }
+          },
+          {
+            "name": "securityAlertSources",
+            "type": "Microsoft.Common.CheckBoxGroup",
+            "label": "Security Alert Sources",
+            "toolTip": "Select Microsoft security alert sources to deploy.",
+            "options": {
+              "items": [
+                { 
+                  "label": "Security Alert (Entra ID Protection - IPC)", 
+                  "value": "EntraIDProtection" 
+                },
+                { 
+                  "label": "Security Alert (Defender for Endpoint - MDATP)", 
+                  "value": "DefenderEndpoint" 
+                },
+                { 
+                  "label": "Security Alert (Defender for Identity - AATP)", 
+                  "value": "DefenderIdentity" 
+                },
+                { 
+                  "label": "Security Alert (Defender for Cloud Apps - MCAS)", 
+                  "value": "DefenderCloudApps" 
+                },
+                { 
+                  "label": "Security Alert (Defender for Cloud)", 
+                  "value": "DefenderCloud" 
+                },
+                { 
+                  "label": "Security Alert (Defender for IoT)", 
+                  "value": "DefenderIoT" 
+                }
+              ]
+            }
+          },
+          {
+            "name": "xdrSources",
+            "type": "Microsoft.Common.CheckBoxGroup",
+            "label": "Microsoft Defender XDR Sources",
+            "toolTip": "Select Microsoft Defender XDR incident and alert sources.",
+            "options": {
+              "items": [
+                { 
+                  "label": "Security Incident (Microsoft Defender XDR)", 
+                  "value": "DefenderXDRIncidents" 
+                },
+                { 
+                  "label": "Security Alert (Microsoft Defender XDR)", 
+                  "value": "DefenderXDRAlerts" 
+                }
+              ]
+            }
+          },
+          {
+            "name": "deploymentValidation",
+            "type": "Microsoft.Common.InfoBox",
+            "options": {
+              "icon": "Info",
+              "text": "Please select at least one log source to deploy. The selected solutions will be installed in your Microsoft Sentinel workspace to enable data ingestion and analytics."
+            }
+          }
+        ]
+      },
+      {
+        "name": "reviewSelection",
+        "label": "Review & Confirm",
+        "elements": [
+          {
+            "name": "deploymentSummary",
+            "type": "Microsoft.Common.Section",
+            "label": "Deployment Summary",
+            "elements": [
+              {
+                "name": "workspaceInfo",
+                "type": "Microsoft.Common.TextBlock",
+                "options": {
+                  "text": "[concat('Target Workspace: ', basics('workspaceName'), ' (Resource Group: ', basics('workspaceResourceGroup'), ')')]"
+                }
+              },
+              {
+                "name": "selectedSourcesCount",
+                "type": "Microsoft.Common.TextBlock",
+                "options": {
+                  "text": "[concat('Total Log Sources Selected: ', string(add(add(add(length(steps('selectLogs').platformLogSources), length(steps('selectLogs').officeLogSources)), length(steps('selectLogs').securityAlertSources)), length(steps('selectLogs').xdrSources))))]"
+                }
+              }
+            ]
           }
         ]
       }
     ],
     "outputs": {
-      "workspaceName": "[parameters('workspaceName')]",
-      "workspaceResourceGroup": "[parameters('workspaceResourceGroup')]",
-      "logSources": "[steps('selectLogs').logSources]"
+      "workspaceName": "[basics('workspaceName')]",
+      "workspaceResourceGroup": "[basics('workspaceResourceGroup')]",
+      "logSources": "[union(union(union(steps('selectLogs').platformLogSources, steps('selectLogs').officeLogSources), steps('selectLogs').securityAlertSources), steps('selectLogs').xdrSources)]"
     }
   }
 }
