@@ -1,5 +1,5 @@
 // ===============================
-// createUiDefinition.json - Portal UI Definition for SecurityAlert-Only Deployment
+// createUiDefinition.json - Portal UI Definition for SecurityAlert-Only Deployment (Fixed CheckBoxGroup Rendering)
 // ===============================
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
