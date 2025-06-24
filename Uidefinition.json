@@ -33,10 +33,43 @@
         "label": "Select Log Sources to Deploy",
         "elements": [
           {
+            "name": "logSourceCategory",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Log Source Category",
+            "toolTip": "Select the category of log sources you want to configure.",
+            "defaultValue": "All Categories",
+            "constraints": {
+              "required": true,
+              "allowedValues": [
+                {
+                  "label": "All Categories",
+                  "value": "all"
+                },
+                {
+                  "label": "Platform & Health",
+                  "value": "platform"
+                },
+                {
+                  "label": "Microsoft 365",
+                  "value": "office365"
+                },
+                {
+                  "label": "Security Alerts",
+                  "value": "security"
+                },
+                {
+                  "label": "Microsoft Defender XDR",
+                  "value": "xdr"
+                }
+              ]
+            }
+          },
+          {
             "name": "platformLogSources",
             "type": "Microsoft.Common.CheckBoxGroup",
             "label": "Platform & Health Log Sources",
             "toolTip": "Select core platform and health monitoring sources.",
+            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'platform'))]",
             "options": {
               "items": [
                 { 
@@ -46,6 +79,14 @@
                 { 
                   "label": "Sentinel Health (Automatic)", 
                   "value": "SentinelHealth" 
+                },
+                {
+                  "label": "Azure Resource Health",
+                  "value": "ResourceHealth"
+                },
+                {
+                  "label": "Azure Service Health",
+                  "value": "ServiceHealth"
                 }
               ]
             }
@@ -55,11 +96,24 @@
             "type": "Microsoft.Common.CheckBoxGroup",
             "label": "Microsoft 365 Activity Log Sources",
             "toolTip": "Select Microsoft 365 and Office activity logging sources.",
+            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'office365'))]",
             "options": {
               "items": [
                 { 
                   "label": "Office Activity (Exchange, SharePoint, Teams)", 
                   "value": "Office365" 
+                },
+                {
+                  "label": "Azure Active Directory Audit Logs",
+                  "value": "AADAuditLogs"
+                },
+                {
+                  "label": "Azure Active Directory Sign-in Logs",
+                  "value": "AADSignInLogs"
+                },
+                {
+                  "label": "Azure Active Directory Non-Interactive User Sign-in Logs",
+                  "value": "AADNonInteractiveUserSignInLogs"
                 }
               ]
             }
@@ -69,6 +123,7 @@
             "type": "Microsoft.Common.CheckBoxGroup",
             "label": "Security Alert Sources",
             "toolTip": "Select Microsoft security alert sources to deploy.",
+            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'security'))]",
             "options": {
               "items": [
                 { 
@@ -94,6 +149,14 @@
                 { 
                   "label": "Security Alert (Defender for IoT)", 
                   "value": "DefenderIoT" 
+                },
+                {
+                  "label": "Microsoft Cloud App Security (MCAS)",
+                  "value": "MCAS"
+                },
+                {
+                  "label": "Azure Security Center",
+                  "value": "SecurityCenter"
                 }
               ]
             }
@@ -103,6 +166,7 @@
             "type": "Microsoft.Common.CheckBoxGroup",
             "label": "Microsoft Defender XDR Sources",
             "toolTip": "Select Microsoft Defender XDR incident and alert sources.",
+            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'xdr'))]",
             "options": {
               "items": [
                 { 
@@ -112,6 +176,14 @@
                 { 
                   "label": "Security Alert (Microsoft Defender XDR)", 
                   "value": "DefenderXDRAlerts" 
+                },
+                {
+                  "label": "Microsoft Defender XDR Advanced Hunting",
+                  "value": "DefenderXDRAdvancedHunting"
+                },
+                {
+                  "label": "Microsoft Defender XDR Email Events",
+                  "value": "DefenderXDREmailEvents"
                 }
               ]
             }
@@ -121,7 +193,7 @@
             "type": "Microsoft.Common.InfoBox",
             "options": {
               "icon": "Info",
-              "text": "Please select at least one log source to deploy. The selected solutions will be installed in your Microsoft Sentinel workspace to enable data ingestion and analytics."
+              "text": "Please select at least one log source to deploy. Use the dropdown above to filter categories, then select specific sources using the checkboxes. The selected solutions will be installed in your Microsoft Sentinel workspace to enable data ingestion and analytics."
             }
           }
         ]
@@ -143,10 +215,24 @@
                 }
               },
               {
+                "name": "selectedCategory",
+                "type": "Microsoft.Common.TextBlock",
+                "options": {
+                  "text": "[concat('Selected Category: ', steps('selectLogs').logSourceCategory)]"
+                }
+              },
+              {
                 "name": "selectedSourcesCount",
                 "type": "Microsoft.Common.TextBlock",
                 "options": {
-                  "text": "[concat('Total Log Sources Selected: ', string(add(add(add(length(steps('selectLogs').platformLogSources), length(steps('selectLogs').officeLogSources)), length(steps('selectLogs').securityAlertSources)), length(steps('selectLogs').xdrSources))))]"
+                  "text": "[concat('Total Log Sources Selected: ', string(add(add(add(length(coalesce(steps('selectLogs').platformLogSources, createArray())), length(coalesce(steps('selectLogs').officeLogSources, createArray()))), length(coalesce(steps('selectLogs').securityAlertSources, createArray()))), length(coalesce(steps('selectLogs').xdrSources, createArray())))))]"
+                }
+              },
+              {
+                "name": "selectedSourcesList",
+                "type": "Microsoft.Common.TextBlock",
+                "options": {
+                  "text": "[concat('Selected Sources: ', string(union(union(union(coalesce(steps('selectLogs').platformLogSources, createArray()), coalesce(steps('selectLogs').officeLogSources, createArray())), coalesce(steps('selectLogs').securityAlertSources, createArray())), coalesce(steps('selectLogs').xdrSources, createArray()))))]"
                 }
               }
             ]
@@ -157,7 +243,12 @@
     "outputs": {
       "workspaceName": "[basics('workspaceName')]",
       "workspaceResourceGroup": "[basics('workspaceResourceGroup')]",
-      "logSources": "[union(union(union(steps('selectLogs').platformLogSources, steps('selectLogs').officeLogSources), steps('selectLogs').securityAlertSources), steps('selectLogs').xdrSources)]"
+      "selectedCategory": "[steps('selectLogs').logSourceCategory]",
+      "logSources": "[union(union(union(coalesce(steps('selectLogs').platformLogSources, createArray()), coalesce(steps('selectLogs').officeLogSources, createArray())), coalesce(steps('selectLogs').securityAlertSources, createArray())), coalesce(steps('selectLogs').xdrSources, createArray()))]",
+      "platformLogSources": "[coalesce(steps('selectLogs').platformLogSources, createArray())]",
+      "officeLogSources": "[coalesce(steps('selectLogs').officeLogSources, createArray())]",
+      "securityAlertSources": "[coalesce(steps('selectLogs').securityAlertSources, createArray())]",
+      "xdrSources": "[coalesce(steps('selectLogs').xdrSources, createArray())]"
     }
   }
 }
