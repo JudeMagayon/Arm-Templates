@@ -1,0 +1,51 @@
+// ===============================
+// createUiDefinition.json - Portal UI Definition for Sentinel Log Deployment
+// ===============================
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
+  "handler": "Microsoft.Resources.CreateUiDefinition",
+  "version": "1.0.0",
+  "parameters": {
+    "basics": [
+      {
+        "name": "workspaceName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Log Analytics Workspace Name",
+        "toolTip": "Enter the name of your existing Log Analytics workspace."
+      },
+      {
+        "name": "workspaceResourceGroup",
+        "type": "Microsoft.Common.ResourceGroupPicker",
+        "label": "Resource Group",
+        "toolTip": "Select the resource group that contains the Log Analytics workspace."
+      }
+    ],
+    "steps": [
+      {
+        "name": "solutions",
+        "label": "Sentinel Content Hub Solutions",
+        "elements": [
+          {
+            "name": "infoText",
+            "type": "Microsoft.Common.TextBlock",
+            "options": {
+              "text": "This deployment will enable Microsoft Sentinel Content Hub solutions for the following free log sources:",
+              "fontSize": "medium"
+            }
+          },
+          {
+            "name": "freeSolutions",
+            "type": "Microsoft.Common.Paragraph",
+            "options": {
+              "text": "• Azure Activity Logs\n• Sentinel Health\n• Entra ID (Sign-in, Audit, Risk Alerts)\n• Office 365 Logs (Exchange, SharePoint, Teams)\n• Microsoft Defender for Endpoint\n• Microsoft Defender for Identity\n• Microsoft Defender for Cloud Apps\n• Microsoft Defender for Cloud\n• Microsoft Defender for IoT\n• Microsoft Defender XDR (Alerts & Incidents)"
+            }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "workspaceName": "[parameters('workspaceName')]",
+      "workspaceResourceGroup": "[parameters('workspaceResourceGroup')]"
+    }
+  }
+}
