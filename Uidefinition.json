@@ -1,254 +1,352 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
-  "handler": "Microsoft.Resources.CreateUiDefinition",
-  "version": "1.0.0",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
   "parameters": {
-    "basics": [
-      {
-        "name": "workspaceName",
-        "type": "Microsoft.Common.TextBox",
-        "label": "Log Analytics Workspace Name",
-        "toolTip": "Enter the name of your existing Log Analytics workspace.",
-        "placeholder": "Enter workspace name",
-        "constraints": {
-          "required": true,
-          "regex": "^[a-zA-Z0-9][a-zA-Z0-9-]{2,62}$",
-          "validationMessage": "Workspace name must be 3-63 characters long and can contain letters, numbers, and hyphens."
-        }
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the existing Log Analytics Workspace where Microsoft Sentinel is enabled."
+      }
+    },
+    "workspaceResourceGroup": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource Group name of the existing Log Analytics Workspace."
+      }
+    },
+    "selectedCategory": {
+      "type": "string",
+      "defaultValue": "all",
+      "metadata": {
+        "description": "Selected log source category from the UI"
+      }
+    },
+    "logSources": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Array of selected log sources from the UI"
+      }
+    },
+    "platformLogSources": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Array of selected platform log sources"
+      }
+    },
+    "officeLogSources": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Array of selected Office 365 log sources"
+      }
+    },
+    "securityAlertSources": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Array of selected security alert sources"
+      }
+    },
+    "xdrSources": {
+      "type": "array",
+      "defaultValue": [],
+      "metadata": {
+        "description": "Array of selected XDR sources"
+      }
+    }
+  },
+  "variables": {
+    "workspaceResourceId": "[resourceId(parameters('workspaceResourceGroup'), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]",
+    "solutionMap": {
+      "AzureActivity": {
+        "contentId": "azuresentinel.azure-sentinel-solution-azureactivity",
+        "displayName": "Azure Activity (Platform Logs)",
+        "version": "3.0.1",
+        "dataConnectorId": "AzureActivity",
+        "dataConnectorVersion": "2.0.0"
       },
-      {
-        "name": "workspaceResourceGroup",
-        "type": "Microsoft.Common.DropDown",
-        "label": "Workspace Resource Group",
-        "toolTip": "Select the resource group that contains your Log Analytics workspace.",
-        "constraints": {
-          "required": true,
-          "allowedValues": "[map(resourceGroups(), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+      "SentinelHealth": {
+        "contentId": "azuresentinel.azure-sentinel-solution-sentinelhealth",
+        "displayName": "Microsoft Sentinel Health",
+        "version": "1.0.0",
+        "dataConnectorId": "SentinelHealth",
+        "dataConnectorVersion": "1.0.0"
+      },
+      "ResourceHealth": {
+        "contentId": "azuresentinel.azure-sentinel-solution-resourcehealth",
+        "displayName": "Azure Resource Health",
+        "version": "1.0.0",
+        "dataConnectorId": "ResourceHealth",
+        "dataConnectorVersion": "1.0.0"
+      },
+      "ServiceHealth": {
+        "contentId": "azuresentinel.azure-sentinel-solution-servicehealth",
+        "displayName": "Azure Service Health",
+        "version": "1.0.0",
+        "dataConnectorId": "ServiceHealth",
+        "dataConnectorVersion": "1.0.0"
+      },
+      "Office365": {
+        "contentId": "azuresentinel.azure-sentinel-solution-office365",
+        "displayName": "Office 365 (Exchange, SharePoint, Teams)",
+        "version": "3.0.0",
+        "dataConnectorId": "Office365",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "AADAuditLogs": {
+        "contentId": "azuresentinel.azure-sentinel-solution-aadauditlogs",
+        "displayName": "Azure Active Directory Audit Logs",
+        "version": "2.0.0",
+        "dataConnectorId": "AzureActiveDirectory",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "AADSignInLogs": {
+        "contentId": "azuresentinel.azure-sentinel-solution-aadsigninlogs",
+        "displayName": "Azure Active Directory Sign-in Logs",
+        "version": "2.0.0",
+        "dataConnectorId": "AzureActiveDirectory",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "AADNonInteractiveUserSignInLogs": {
+        "contentId": "azuresentinel.azure-sentinel-solution-aadnoninteractivesigninlogs",
+        "displayName": "Azure AD Non-Interactive User Sign-in Logs",
+        "version": "2.0.0",
+        "dataConnectorId": "AzureActiveDirectory",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "EntraIDProtection": {
+        "contentId": "azuresentinel.azure-sentinel-solution-entraid-protection",
+        "displayName": "Entra ID Protection (IPC)",
+        "version": "3.0.0",
+        "dataConnectorId": "AzureActiveDirectoryIdentityProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderEndpoint": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-endpoint",
+        "displayName": "Microsoft Defender for Endpoint (MDATP)",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftDefenderAdvancedThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderIdentity": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-identity",
+        "displayName": "Microsoft Defender for Identity (AATP)",
+        "version": "3.0.0",
+        "dataConnectorId": "AzureAdvancedThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderCloudApps": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-cloudapps",
+        "displayName": "Microsoft Defender for Cloud Apps (MCAS)",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftCloudAppSecurity",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderCloud": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-cloud",
+        "displayName": "Microsoft Defender for Cloud",
+        "version": "3.0.0",
+        "dataConnectorId": "AzureSecurityCenter",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderIoT": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-iot",
+        "displayName": "Microsoft Defender for IoT",
+        "version": "3.0.0",
+        "dataConnectorId": "IoT",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "MCAS": {
+        "contentId": "azuresentinel.azure-sentinel-solution-mcas",
+        "displayName": "Microsoft Cloud App Security",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftCloudAppSecurity",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "SecurityCenter": {
+        "contentId": "azuresentinel.azure-sentinel-solution-securitycenter",
+        "displayName": "Azure Security Center",
+        "version": "3.0.0",
+        "dataConnectorId": "AzureSecurityCenter",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderXDRIncidents": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-xdr-incidents",
+        "displayName": "Microsoft Defender XDR Incidents",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderXDRAlerts": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-xdr-alerts",
+        "displayName": "Microsoft Defender XDR Alerts",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderXDRAdvancedHunting": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-xdr-advancedhunting",
+        "displayName": "Microsoft Defender XDR Advanced Hunting",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      },
+      "DefenderXDREmailEvents": {
+        "contentId": "azuresentinel.azure-sentinel-solution-defender-xdr-emailevents",
+        "displayName": "Microsoft Defender XDR Email Events",
+        "version": "3.0.0",
+        "dataConnectorId": "MicrosoftThreatProtection",
+        "dataConnectorVersion": "2.0.0"
+      }
+    }
+  },
+  "resources": [
+    {
+      "copy": {
+        "name": "logSourceLoop",
+        "count": "[length(parameters('logSources'))]"
+      },
+      "condition": "[greater(length(parameters('logSources')), 0)]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/', variables('solutionMap')[parameters('logSources')[copyIndex()]].contentId)]",
+      "properties": {
+        "contentId": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].contentId]",
+        "contentKind": "Solution",
+        "contentProductId": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].contentId]",
+        "displayName": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName]",
+        "version": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].version]",
+        "source": {
+          "kind": "Solution",
+          "name": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName]",
+          "sourceId": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].contentId]"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId]",
+              "version": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorVersion]"
+            }
+          ]
         }
       }
-    ],
-    "steps": [
-      {
-        "name": "selectLogs",
-        "label": "Select Log Sources to Deploy",
-        "elements": [
-          {
-            "name": "logSourceCategory",
-            "type": "Microsoft.Common.DropDown",
-            "label": "Log Source Category",
-            "toolTip": "Select the category of log sources you want to configure.",
-            "defaultValue": "All Categories",
-            "constraints": {
-              "required": true,
-              "allowedValues": [
-                {
-                  "label": "All Categories",
-                  "value": "all"
-                },
-                {
-                  "label": "Platform & Health",
-                  "value": "platform"
-                },
-                {
-                  "label": "Microsoft 365",
-                  "value": "office365"
-                },
-                {
-                  "label": "Security Alerts",
-                  "value": "security"
-                },
-                {
-                  "label": "Microsoft Defender XDR",
-                  "value": "xdr"
-                }
-              ]
-            }
-          },
-          {
-            "name": "platformLogSources",
-            "type": "Microsoft.Common.CheckBoxGroup",
-            "label": "Platform & Health Log Sources",
-            "toolTip": "Select core platform and health monitoring sources.",
-            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'platform'))]",
-            "options": {
-              "items": [
-                { 
-                  "label": "Azure Activity (Platform Logs)", 
-                  "value": "AzureActivity" 
-                },
-                { 
-                  "label": "Sentinel Health (Automatic)", 
-                  "value": "SentinelHealth" 
-                },
-                {
-                  "label": "Azure Resource Health",
-                  "value": "ResourceHealth"
-                },
-                {
-                  "label": "Azure Service Health",
-                  "value": "ServiceHealth"
-                }
-              ]
-            }
-          },
-          {
-            "name": "officeLogSources",
-            "type": "Microsoft.Common.CheckBoxGroup",
-            "label": "Microsoft 365 Activity Log Sources",
-            "toolTip": "Select Microsoft 365 and Office activity logging sources.",
-            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'office365'))]",
-            "options": {
-              "items": [
-                { 
-                  "label": "Office Activity (Exchange, SharePoint, Teams)", 
-                  "value": "Office365" 
-                },
-                {
-                  "label": "Azure Active Directory Audit Logs",
-                  "value": "AADAuditLogs"
-                },
-                {
-                  "label": "Azure Active Directory Sign-in Logs",
-                  "value": "AADSignInLogs"
-                },
-                {
-                  "label": "Azure Active Directory Non-Interactive User Sign-in Logs",
-                  "value": "AADNonInteractiveUserSignInLogs"
-                }
-              ]
-            }
-          },
-          {
-            "name": "securityAlertSources",
-            "type": "Microsoft.Common.CheckBoxGroup",
-            "label": "Security Alert Sources",
-            "toolTip": "Select Microsoft security alert sources to deploy.",
-            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'security'))]",
-            "options": {
-              "items": [
-                { 
-                  "label": "Security Alert (Entra ID Protection - IPC)", 
-                  "value": "EntraIDProtection" 
-                },
-                { 
-                  "label": "Security Alert (Defender for Endpoint - MDATP)", 
-                  "value": "DefenderEndpoint" 
-                },
-                { 
-                  "label": "Security Alert (Defender for Identity - AATP)", 
-                  "value": "DefenderIdentity" 
-                },
-                { 
-                  "label": "Security Alert (Defender for Cloud Apps - MCAS)", 
-                  "value": "DefenderCloudApps" 
-                },
-                { 
-                  "label": "Security Alert (Defender for Cloud)", 
-                  "value": "DefenderCloud" 
-                },
-                { 
-                  "label": "Security Alert (Defender for IoT)", 
-                  "value": "DefenderIoT" 
-                },
-                {
-                  "label": "Microsoft Cloud App Security (MCAS)",
-                  "value": "MCAS"
-                },
-                {
-                  "label": "Azure Security Center",
-                  "value": "SecurityCenter"
-                }
-              ]
-            }
-          },
-          {
-            "name": "xdrSources",
-            "type": "Microsoft.Common.CheckBoxGroup",
-            "label": "Microsoft Defender XDR Sources",
-            "toolTip": "Select Microsoft Defender XDR incident and alert sources.",
-            "visible": "[or(equals(steps('selectLogs').logSourceCategory, 'all'), equals(steps('selectLogs').logSourceCategory, 'xdr'))]",
-            "options": {
-              "items": [
-                { 
-                  "label": "Security Incident (Microsoft Defender XDR)", 
-                  "value": "DefenderXDRIncidents" 
-                },
-                { 
-                  "label": "Security Alert (Microsoft Defender XDR)", 
-                  "value": "DefenderXDRAlerts" 
-                },
-                {
-                  "label": "Microsoft Defender XDR Advanced Hunting",
-                  "value": "DefenderXDRAdvancedHunting"
-                },
-                {
-                  "label": "Microsoft Defender XDR Email Events",
-                  "value": "DefenderXDREmailEvents"
-                }
-              ]
-            }
-          },
-          {
-            "name": "deploymentValidation",
-            "type": "Microsoft.Common.InfoBox",
-            "options": {
-              "icon": "Info",
-              "text": "Please select at least one log source to deploy. Use the dropdown above to filter categories, then select specific sources using the checkboxes. The selected solutions will be installed in your Microsoft Sentinel workspace to enable data ingestion and analytics."
-            }
-          }
-        ]
+    },
+    {
+      "copy": {
+        "name": "dataConnectorLoop",
+        "count": "[length(parameters('logSources'))]"
       },
-      {
-        "name": "reviewSelection",
-        "label": "Review & Confirm",
-        "elements": [
-          {
-            "name": "deploymentSummary",
-            "type": "Microsoft.Common.Section",
-            "label": "Deployment Summary",
-            "elements": [
+      "condition": "[greater(length(parameters('logSources')), 0)]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/dataConnectors",
+      "apiVersion": "2023-02-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/', variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '-', uniqueString(resourceGroup().id, parameters('logSources')[copyIndex()]))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces/providers/contentPackages', parameters('workspaceName'), 'Microsoft.SecurityInsights', variables('solutionMap')[parameters('logSources')[copyIndex()]].contentId)]"
+      ],
+      "properties": {
+        "connectorUiConfig": {
+          "title": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName]",
+          "publisher": "Microsoft",
+          "descriptionMarkdown": "[concat('Connect ', variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName, ' to Microsoft Sentinel')]",
+          "graphQueries": [
+            {
+              "metricName": "Total data received",
+              "legend": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName]",
+              "baseQuery": "[concat(variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '_CL')]"
+            }
+          ],
+          "sampleQueries": [
+            {
+              "description": "[concat('All ', variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName, ' logs')]",
+              "query": "[concat(variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '_CL | take 10')]"
+            }
+          ],
+          "dataTypes": [
+            {
+              "name": "[concat(variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '_CL')]",
+              "lastDataReceivedQuery": "[concat(variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '_CL | summarize Time = max(TimeGenerated) | where isnotempty(Time)')]"
+            }
+          ],
+          "connectivityCriterias": [
+            {
+              "type": "IsConnectedQuery",
+              "value": [
+                "[concat(variables('solutionMap')[parameters('logSources')[copyIndex()]].dataConnectorId, '_CL | summarize LastLogReceived = max(TimeGenerated) | project IsConnected = LastLogReceived > ago(30d)')]"
+              ]
+            }
+          ],
+          "availability": {
+            "status": 1,
+            "isPreview": false
+          },
+          "permissions": {
+            "resourceProvider": [
               {
-                "name": "workspaceInfo",
-                "type": "Microsoft.Common.TextBlock",
-                "options": {
-                  "text": "[concat('Target Workspace: ', basics('workspaceName'), ' (Resource Group: ', basics('workspaceResourceGroup'), ')')]"
-                }
-              },
-              {
-                "name": "selectedCategory",
-                "type": "Microsoft.Common.TextBlock",
-                "options": {
-                  "text": "[concat('Selected Category: ', steps('selectLogs').logSourceCategory)]"
-                }
-              },
-              {
-                "name": "selectedSourcesCount",
-                "type": "Microsoft.Common.TextBlock",
-                "options": {
-                  "text": "[concat('Total Log Sources Selected: ', string(add(add(add(length(coalesce(steps('selectLogs').platformLogSources, createArray())), length(coalesce(steps('selectLogs').officeLogSources, createArray()))), length(coalesce(steps('selectLogs').securityAlertSources, createArray()))), length(coalesce(steps('selectLogs').xdrSources, createArray())))))]"
-                }
-              },
-              {
-                "name": "selectedSourcesList",
-                "type": "Microsoft.Common.TextBlock",
-                "options": {
-                  "text": "[concat('Selected Sources: ', string(union(union(union(coalesce(steps('selectLogs').platformLogSources, createArray()), coalesce(steps('selectLogs').officeLogSources, createArray())), coalesce(steps('selectLogs').securityAlertSources, createArray())), coalesce(steps('selectLogs').xdrSources, createArray()))))]"
+                "provider": "Microsoft.OperationalInsights/workspaces",
+                "permissionsDisplayText": "read and write permissions are required.",
+                "providerDisplayName": "Workspace",
+                "scope": "Workspace",
+                "requiredPermissions": {
+                  "write": true,
+                  "read": true,
+                  "delete": true
                 }
               }
             ]
-          }
-        ]
+          },
+          "instructionSteps": [
+            {
+              "title": "[concat('Connect ', variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName)]",
+              "description": "[concat('Enable ', variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName, ' data connector to start collecting logs in Microsoft Sentinel.')]",
+              "instructions": [
+                {
+                  "parameters": {
+                    "connectorKind": "AzureFunction",
+                    "title": "[variables('solutionMap')[parameters('logSources')[copyIndex()]].displayName]",
+                    "enable": true
+                  },
+                  "type": "DataConnectorsGrid"
+                }
+              ]
+            }
+          ]
+        }
       }
-    ],
-    "outputs": {
-      "workspaceName": "[basics('workspaceName')]",
-      "workspaceResourceGroup": "[basics('workspaceResourceGroup')]",
-      "selectedCategory": "[steps('selectLogs').logSourceCategory]",
-      "logSources": "[union(union(union(coalesce(steps('selectLogs').platformLogSources, createArray()), coalesce(steps('selectLogs').officeLogSources, createArray())), coalesce(steps('selectLogs').securityAlertSources, createArray())), coalesce(steps('selectLogs').xdrSources, createArray()))]",
-      "platformLogSources": "[coalesce(steps('selectLogs').platformLogSources, createArray())]",
-      "officeLogSources": "[coalesce(steps('selectLogs').officeLogSources, createArray())]",
-      "securityAlertSources": "[coalesce(steps('selectLogs').securityAlertSources, createArray())]",
-      "xdrSources": "[coalesce(steps('selectLogs').xdrSources, createArray())]"
+    }
+  ],
+  "outputs": {
+    "workspaceResourceId": {
+      "type": "string",
+      "value": "[variables('workspaceResourceId')]"
+    },
+    "deploymentStatus": {
+      "type": "string",
+      "value": "[concat('Deployment completed for workspace: ', parameters('workspaceName'), ' with ', length(parameters('logSources')), ' log sources')]"
+    },
+    "selectedCategory": {
+      "type": "string",
+      "value": "[parameters('selectedCategory')]"
+    },
+    "deployedLogSources": {
+      "type": "array",
+      "value": "[parameters('logSources')]"
+    },
+    "deployedSolutions": {
+      "type": "array",
+      "value": "[map(parameters('logSources'), lambda('source', variables('solutionMap')[lambdaVariables('source')].displayName))]"
     }
   }
 }
