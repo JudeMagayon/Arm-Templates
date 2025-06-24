@@ -1,5 +1,5 @@
 // ===============================
-// createUiDefinition.json - Portal UI Definition for Sentinel Log Deployment
+// createUiDefinition.json - Portal UI Definition for Selective Sentinel Log Deployment
 // ===============================
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
@@ -22,22 +22,34 @@
     ],
     "steps": [
       {
-        "name": "solutions",
-        "label": "Sentinel Content Hub Solutions",
+        "name": "selectLogs",
+        "label": "Select Free Log Sources",
         "elements": [
           {
-            "name": "infoText",
-            "type": "Microsoft.Common.TextBlock",
+            "name": "logSources",
+            "type": "Microsoft.Common.CheckBoxGroup",
+            "label": "Choose which free log sources to ingest",
+            "toolTip": "Select one or more Microsoft Sentinel Content Hub solutions to deploy.",
+            "constraints": {
+              "required": true,
+              "minLength": 1
+            },
             "options": {
-              "text": "This deployment will enable Microsoft Sentinel Content Hub solutions for the following free log sources:",
-              "fontSize": "medium"
-            }
-          },
-          {
-            "name": "freeSolutions",
-            "type": "Microsoft.Common.Paragraph",
-            "options": {
-              "text": "• Azure Activity Logs\n• Sentinel Health\n• Entra ID (Sign-in, Audit, Risk Alerts)\n• Office 365 Logs (Exchange, SharePoint, Teams)\n• Microsoft Defender for Endpoint\n• Microsoft Defender for Identity\n• Microsoft Defender for Cloud Apps\n• Microsoft Defender for Cloud\n• Microsoft Defender for IoT\n• Microsoft Defender XDR (Alerts & Incidents)"
+              "items": [
+                { "label": "Azure Activity Logs", "value": "AzureActivity" },
+                { "label": "Sentinel Health Monitoring", "value": "SentinelHealth" },
+                { "label": "Entra ID - Sign-in Logs", "value": "EntraSignInLogs" },
+                { "label": "Entra ID - Audit Logs", "value": "EntraAuditLogs" },
+                { "label": "Entra ID Protection Alerts", "value": "EntraRiskAlerts" },
+                { "label": "Office 365 Logs", "value": "Office365" },
+                { "label": "Defender for Endpoint (MDATP)", "value": "DefenderEndpoint" },
+                { "label": "Defender for Identity (AATP)", "value": "DefenderIdentity" },
+                { "label": "Defender for Cloud Apps (MCAS)", "value": "DefenderCloudApps" },
+                { "label": "Defender for Cloud", "value": "DefenderCloud" },
+                { "label": "Defender for IoT", "value": "DefenderIoT" },
+                { "label": "Defender XDR - Alerts", "value": "DefenderXDRAlerts" },
+                { "label": "Defender XDR - Incidents", "value": "DefenderXDRIncidents" }
+              ]
             }
           }
         ]
@@ -45,7 +57,8 @@
     ],
     "outputs": {
       "workspaceName": "[parameters('workspaceName')]",
-      "workspaceResourceGroup": "[parameters('workspaceResourceGroup')]"
+      "workspaceResourceGroup": "[parameters('workspaceResourceGroup')]",
+      "logSources": "[steps('selectLogs').logSources]"
     }
   }
 }
