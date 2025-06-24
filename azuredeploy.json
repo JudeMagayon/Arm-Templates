@@ -1,6 +1,3 @@
-// ===============================
-// azuredeploy.json - ARM Template with Conditional Log Deployment
-// ===============================
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
@@ -8,165 +5,437 @@
     "workspaceName": {
       "type": "string",
       "metadata": {
-        "description": "Name of the existing Log Analytics Workspace."
+        "description": "Name of the existing Log Analytics Workspace where Microsoft Sentinel is enabled."
       }
     },
     "workspaceResourceGroup": {
       "type": "string",
       "metadata": {
-        "description": "Resource Group of the existing Log Analytics Workspace."
+        "description": "Resource Group name of the existing Log Analytics Workspace."
       }
     },
     "logSources": {
       "type": "array",
+      "defaultValue": [],
       "metadata": {
-        "description": "List of selected log sources to deploy."
+        "description": "Array of selected log sources to deploy as content packages."
       }
     }
+  },
+  "variables": {
+    "workspaceResourceId": "[resourceId(parameters('workspaceResourceGroup'), 'Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
   },
   "resources": [
     {
       "condition": "[contains(parameters('logSources'), 'AzureActivity')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-azureactivity')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-azureactivity",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-azureactivity",
-        "displayName": "Azure Activity",
-        "version": "3.0.1"
+        "displayName": "Azure Activity (Platform Logs)",
+        "version": "3.0.1",
+        "source": {
+          "kind": "Solution",
+          "name": "Azure Activity",
+          "sourceId": "azuresentinel.azure-sentinel-solution-azureactivity"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "AzureActivity",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'SentinelHealth')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-sentinelhealth')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-sentinelhealth",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-sentinelhealth",
-        "displayName": "Sentinel Health Monitoring",
-        "version": "1.0.0"
+        "displayName": "Sentinel Health (Automatic)",
+        "version": "1.0.0",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Sentinel Health Monitoring",
+          "sourceId": "azuresentinel.azure-sentinel-solution-sentinelhealth"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation", 
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'Office365')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-office365')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-office365",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-office365",
-        "displayName": "Office 365",
-        "version": "3.0.2"
+        "displayName": "Office Activity (Exchange, SharePoint, Teams)",
+        "version": "3.0.2",
+        "source": {
+          "kind": "Solution",
+          "name": "Office 365",
+          "sourceId": "azuresentinel.azure-sentinel-solution-office365"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "Office365",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
-      "condition": "[contains(parameters('logSources'), 'EntraRiskAlerts')]",
+      "condition": "[contains(parameters('logSources'), 'EntraIDProtection')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
-      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-entra-id-riskalerts')]",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-identityprotection')]",
       "properties": {
-        "contentId": "azuresentinel.azure-sentinel-solution-entra-id-riskalerts",
+        "contentId": "azuresentinel.azure-sentinel-solution-identityprotection",
         "contentKind": "Solution",
-        "contentProductId": "azuresentinel.azure-sentinel-solution-entra-id-riskalerts",
-        "displayName": "Entra ID Protection Alerts",
-        "version": "1.0.0"
+        "contentProductId": "azuresentinel.azure-sentinel-solution-identityprotection",
+        "displayName": "Security Alert (Entra ID Protection - IPC)",
+        "version": "3.0.0",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Entra ID Protection",
+          "sourceId": "azuresentinel.azure-sentinel-solution-identityprotection"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "AzureActiveDirectoryIdentityProtection",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderEndpoint')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection",
-        "displayName": "Microsoft Defender for Endpoint",
-        "version": "3.0.2"
+        "displayName": "Security Alert (Defender for Endpoint - MDATP)",
+        "version": "3.0.2",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender for Endpoint", 
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoftdefenderadvancedthreatprotection"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "MicrosoftDefenderAdvancedThreatProtection",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderIdentity')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity",
-        "displayName": "Microsoft Defender for Identity",
-        "version": "2.0.2"
+        "displayName": "Security Alert (Defender for Identity - AATP)",
+        "version": "2.0.2",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender for Identity",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforidentity"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "AzureAdvancedThreatProtection",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderCloudApps')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity",
-        "displayName": "Microsoft Defender for Cloud Apps",
-        "version": "3.0.2"
+        "displayName": "Security Alert (Defender for Cloud Apps - MCAS)",
+        "version": "3.0.2",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender for Cloud Apps",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoftcloudappsecurity"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "MicrosoftCloudAppSecurity",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderCloud')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud",
-        "displayName": "Microsoft Defender for Cloud",
-        "version": "3.0.1"
+        "displayName": "Security Alert (Defender for Cloud)",
+        "version": "3.0.1",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender for Cloud",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforcloud"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "AzureSecurityCenter",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderIoT')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
+      "apiVersion": "2023-04-01-preview",
       "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoftdefenderforiot')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforiot",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforiot",
-        "displayName": "Microsoft Defender for IoT",
-        "version": "3.0.0"
-      }
-    },
-    {
-      "condition": "[contains(parameters('logSources'), 'DefenderXDRAlerts')]",
-      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
-      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender')]",
-      "properties": {
-        "contentId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
-        "contentKind": "Solution",
-        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
-        "displayName": "Microsoft Defender XDR",
-        "version": "3.0.3"
+        "displayName": "Security Alert (Defender for IoT)",
+        "version": "3.0.0",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender for IoT",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoftdefenderforiot"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "IoT",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     },
     {
       "condition": "[contains(parameters('logSources'), 'DefenderXDRIncidents')]",
       "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
-      "apiVersion": "2025-03-01",
-      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender')]",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender-incidents')]",
       "properties": {
         "contentId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
         "contentKind": "Solution",
         "contentProductId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
-        "displayName": "Microsoft Defender XDR",
-        "version": "3.0.3"
+        "displayName": "Security Incident (Microsoft Defender XDR)",
+        "version": "3.0.3",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender XDR",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoft365defender"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "MicrosoftThreatProtection",
+              "version": "2.0.0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "condition": "[contains(parameters('logSources'), 'DefenderXDRAlerts')]",
+      "type": "Microsoft.OperationalInsights/workspaces/providers/contentPackages",
+      "apiVersion": "2023-04-01-preview",
+      "name": "[concat(parameters('workspaceName'), '/Microsoft.SecurityInsights/azuresentinel.azure-sentinel-solution-microsoft365defender-alerts')]",
+      "properties": {
+        "contentId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "contentKind": "Solution",
+        "contentProductId": "azuresentinel.azure-sentinel-solution-microsoft365defender",
+        "displayName": "Security Alert (Microsoft Defender XDR)",
+        "version": "3.0.3",
+        "source": {
+          "kind": "Solution",
+          "name": "Microsoft Defender XDR",
+          "sourceId": "azuresentinel.azure-sentinel-solution-microsoft365defender"
+        },
+        "author": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com"
+        },
+        "support": {
+          "name": "Microsoft Corporation",
+          "email": "support@microsoft.com",
+          "tier": "Microsoft"
+        },
+        "dependencies": {
+          "operator": "AND",
+          "criteria": [
+            {
+              "kind": "DataConnector",
+              "contentId": "MicrosoftThreatProtection",
+              "version": "2.0.0"
+            }
+          ]
+        }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "workspaceResourceId": {
+      "type": "string",
+      "value": "[variables('workspaceResourceId')]"
+    },
+    "deployedSolutions": {
+      "type": "array",
+      "value": "[parameters('logSources')]"
+    },
+    "deploymentStatus": {
+      "type": "string",
+      "value": "[concat('Successfully deployed ', string(length(parameters('logSources'))), ' Microsoft Sentinel content packages to workspace: ', parameters('workspaceName'))]"
+    }
+  }
 }
