@@ -1,5 +1,5 @@
 // ===============================
-// createUiDefinition.json - Portal UI Definition for SecurityAlert-Only Deployment (Fixed Boolean UI)
+// createUiDefinition.json - Portal UI Definition for All Free Log Sources with Boolean UI
 // ===============================
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/uiDefinition.json#",
@@ -23,74 +23,19 @@
     "steps": [
       {
         "name": "selectLogs",
-        "label": "Select Security Alert Log Sources",
+        "label": "Select Free Log Sources",
         "elements": [
-          {
-            "name": "AzureActivity",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Azure Activity Logs",
-            "defaultValue": false
-          },
-          {
-            "name": "SentinelHealth",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Sentinel Health Monitoring",
-            "defaultValue": false
-          },
-          {
-            "name": "Office365",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Office 365 Logs",
-            "defaultValue": false
-          },
-          {
-            "name": "EntraRiskAlerts",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Entra ID Protection Alerts",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderEndpoint",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender for Endpoint (MDATP)",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderIdentity",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender for Identity (AATP)",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderCloudApps",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender for Cloud Apps (MCAS)",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderCloud",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender for Cloud",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderIoT",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender for IoT",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderXDRAlerts",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender XDR - Alerts",
-            "defaultValue": false
-          },
-          {
-            "name": "DefenderXDRIncidents",
-            "type": "Microsoft.Common.Toggle",
-            "label": "Defender XDR - Incidents",
-            "defaultValue": false
-          }
+          { "name": "AzureActivity", "type": "Microsoft.Common.Toggle", "label": "Azure Activity (Platform Logs)", "defaultValue": false },
+          { "name": "SentinelHealth", "type": "Microsoft.Common.Toggle", "label": "Sentinel Health (Automatic)", "defaultValue": false },
+          { "name": "Office365", "type": "Microsoft.Common.Toggle", "label": "Office Activity (Exchange, SharePoint, Teams)", "defaultValue": false },
+          { "name": "EntraRiskAlerts", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Entra ID Protection - IPC)", "defaultValue": false },
+          { "name": "DefenderEndpoint", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Endpoint - MDATP)", "defaultValue": false },
+          { "name": "DefenderIdentity", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Identity - AATP)", "defaultValue": false },
+          { "name": "DefenderCloudApps", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Cloud Apps - MCAS)", "defaultValue": false },
+          { "name": "DefenderCloud", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for Cloud)", "defaultValue": false },
+          { "name": "DefenderIoT", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Defender for IoT)", "defaultValue": false },
+          { "name": "DefenderXDRAlerts", "type": "Microsoft.Common.Toggle", "label": "Security Alert (Microsoft Defender XDR)", "defaultValue": false },
+          { "name": "DefenderXDRIncidents", "type": "Microsoft.Common.Toggle", "label": "Security Incident (Microsoft Defender XDR)", "defaultValue": false }
         ]
       }
     ],
