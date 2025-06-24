@@ -24,7 +24,10 @@ This repository contains an ARM template and UI definition that deploy **13 Micr
 
 Click the button below to deploy directly via the Azure Portal:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJudeMagayon%2FArm-Templates%2Fmain%2Fazuredeploy.json)
+Click the button below to deploy directly via the Azure Portal:
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FJudeMagayon%2FArm-Templates%2Fmain%2Fazuredeploy.json?uiFormDefinitionUri=https%3A%2F%2Fraw.githubusercontent.com%2FJudeMagayon%2FArm-Templates%2Fmain%2FUidefinition.json)
+
 
 > 📌 You will be prompted to:
 > - Select a Resource Group (must contain your existing Log Analytics workspace)
