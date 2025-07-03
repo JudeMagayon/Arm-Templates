@@ -1,0 +1,70 @@
+{
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json",
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# Sentinel Ingested Logs Overview\n\nThis dashboard provides insight into log volume and trends for the following log types: SecurityAlert and OfficeActivity."
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union\n  OfficeActivity | extend LogType = \"OfficeActivity\"\n, SecurityAlert  | extend LogType = \"SecurityAlert\"\n| summarize Events=count() by LogType\n| sort by LogType asc",
+        "size": 1,
+        "title": "Summary of Log Events (Last 24h)",
+        "timeContext": {
+          "durationMs": 86400000
+        },
+        "chartSettings": {
+          "type": "table"
+        }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "union\n  OfficeActivity | extend LogType = \"OfficeActivity\"\n, SecurityAlert  | extend LogType = \"SecurityAlert\"\n| summarize Count=count() by bin(TimeGenerated, 1d), LogType\n| render timechart",
+        "size": 1,
+        "title": "Log Volume Trend (Last 7 Days)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "chartSettings": {
+          "type": "timechart"
+        }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "SecurityAlert\n| where TimeGenerated > ago(7d)\n| summarize AlertCount=count() by AlertName\n| top 10 by AlertCount desc",
+        "title": "Top 10 Security Alerts",
+        "size": 1,
+        "chartSettings": {
+          "type": "barchart",
+          "xColumn": "AlertName",
+          "yColumn": "AlertCount"
+        }
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "OfficeActivity\n| where TimeGenerated > ago(7d)\n| summarize Events=count() by UserId\n| top 10 by Events desc",
+        "title": "Top Users in OfficeActivity",
+        "size": 1,
+        "chartSettings": {
+          "type": "piechart",
+          "segmentColumn": "UserId",
+          "valueColumn": "Events"
+        }
+      }
+    }
+  ]
+}
